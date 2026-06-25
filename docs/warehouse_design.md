@@ -52,35 +52,6 @@ Stores fraud classification attributes.
 
 ---
 
-## Star Schema
+## Star Schema (Dimensional Modelling)
 
-dim_time
-
-↓
-
-fact_transactions
-
-↑
-
-dim_account
-
-↑
-
-dim_transaction_type
-
-↑
-
-dim_fraud_status
-
-## Star Schema Architecture
-
-                   dim_time
-                       |
-                       |
-dim_account ---- fact_transactions ---- dim_transaction_type
-       |               |
-       |               |
-       +---------------+
-                       |
-                       |
-               dim_fraud_status
+![alt text](image.png)
