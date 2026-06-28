@@ -4,7 +4,8 @@
 
 The AWS layer forms the storage foundation of the Fraud Detection Analytics Platform.
 
-The purpose of introducing AWS into this project is to create a reliable location where transaction data can be stored before it moves into the analytical warehouse.
+The purpose of introducing AWS into this project is to create a secure and reliable landing location for transaction data before it is loaded into Snowflake for analytical processing.
+
 
 The platform follows a layered data architecture where raw transaction data is first collected, stored, transformed, and then exposed for reporting and analytics.
 
@@ -12,6 +13,7 @@ The data flow is:
 
 ![alt text](image-1.png)
 
+Amazon S3 acts as the data lake storage layer, while Snowflake and dbt handle analytical processing and transformation.
 
 ---
 
@@ -33,7 +35,7 @@ Using AWS allows the platform to:
 
 # Why Amazon S3 is Used
 
-Amazon S3 is used as the data lake storage layer for this project.
+Amazon S3 is used as the raw data landing zone for the fraud analytics platform.
 
 The transaction dataset is first stored in S3 before loading into Snowflake because the raw data should be preserved independently from the transformation process.
 
@@ -43,9 +45,10 @@ This approach provides:
 - Ability to reload data if transformations fail
 - Separation between storage and analytical processing
 - Scalable storage as transaction volume grows
+- Integration with future data pipelines
 
-
-For this project, S3 acts as the landing zone between the ingestion process and the data warehouse.
+For this project, S3 acts as the landing zone between the ingestion process and the data warehouse. No analytical transformations are performed inside S3.
+Transformation logic is handled by dbt after data is loaded into Snowflake.
 
 
 ---
@@ -60,12 +63,15 @@ raw/
 
     transactions/
 
-        transactions.csv
+        paysim_transactions.csv
 
-
-processed/
 
 archive/
+
+    transactions/
+
+
+
 
 
 ## Raw Layer
@@ -79,17 +85,15 @@ Purpose:
 - Maintain the original dataset
 - Support data recovery
 - Enable future reprocessing
-
-
-## Processed Layer
-
-The processed layer will contain cleaned and validated datasets after ingestion and quality checks.
+- Allow reprocessing when required 
 
 
 ## Archive Layer
 
 The archive layer stores previous versions of files to maintain historical records.
 
+## S3 Versioning
+S3 versioning is enabled to protect against accidental deletion or overwriting of objects.
 
 ---
 
