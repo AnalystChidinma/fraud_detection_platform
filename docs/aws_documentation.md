@@ -145,3 +145,39 @@ The AWS foundation will later support:
 The final architecture will allow transaction data to move through the platform:
 
 ![alt text](image-2.png)
+
+
+## AWS Region Selection
+
+The Fraud Detection Analytics Platform uses the AWS London Region (eu-west-2).
+
+The region was selected based on:
+
+- Availability of AWS services
+- Potential UK/EU deployment scenarios
+- Reasonable latency considerations
+- Cost and operational simplicity
+
+## Implemented S3 Landing Zone
+
+The Fraud Detection Analytics Platform uses Amazon S3 as the raw data landing zone.
+
+The implemented bucket structure is:
+
+fraud-detection-platform-chidinma/
+
+├── raw/
+
+│   └── transactions/
+
+
+└── archive/
+
+    └── transactions/
+
+
+The raw layer stores the original transaction dataset before loading into Snowflake.
+
+The archive layer stores historical copies of previous transaction files for retention and auditing purposes.
+
+No analytical transformations are performed in S3. Data transformation and dimensional modeling are handled in Snowflake using dbt.

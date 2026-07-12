@@ -1,7 +1,31 @@
+# Virtual Environment
 venv/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+
+# Environment Variables
 .env
-.airflow/
-logs/
+
+# AWS Credentials
+.aws/
+
+# VS Code
+.vscode/
+
+# OS Files
 .DS_Store
+
+# Data
+data/raw/*.csv
+data/archive/*.csv
+
+# Logs
+logs/
+*.log
+
+# AWS Installer
+aws/
+awscliv2.zip
