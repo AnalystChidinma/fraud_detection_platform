@@ -1,43 +1,69 @@
 """
-Application configuration.
-
-This module centralizes all configuration used throughout the
-fraud detection ingestion pipeline.
-
-Environment-specific values are loaded from the .env file,
-while project paths and application constants are defined here.
-
+Centralized application configuration for the Fraud Detection project.
 """
 
-from pathlib import Path
+import logging
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 
-load_dotenv()
+# Project root:
+# Fraud_detection/
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load the root project .env file explicitly.
+load_dotenv(BASE_DIR / ".env")
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-DATA_DIR = PROJECT_ROOT / "data"
-RAW_DATA_DIR = DATA_DIR / "raw"
-ARCHIVE_DIR = DATA_DIR / "archive"
-SAMPLE_DIR = DATA_DIR / "sample"
-
-LOG_DIR = PROJECT_ROOT / "logs"
-
-
-
-AWS_REGION = os.getenv("AWS_REGION")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
-S3_RAW_PREFIX = os.getenv("S3_RAW_PREFIX")
-S3_ARCHIVE_PREFIX = os.getenv("S3_ARCHIVE_PREFIX")
+# Logging configuration
+LOG_DIR = BASE_DIR / "logs"
+LOG_FILE_NAME = os.getenv("LOG_FILE_NAME", "fraud_detection.log")
+LOG_LEVEL = getattr(
+    logging,
+    os.getenv("LOG_LEVEL", "INFO").upper(),
+    logging.INFO,
+)
 
 
+class Settings:
+    """Application configuration loaded from environment variables."""
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-LOG_FILE_NAME = "ingestion.log"
+    # MinIO connection settings
+    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+    MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
+    MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
+    # MinIO bucket names
+    MINIO_RAW_BUCKET = os.getenv("MINIO_RAW_BUCKET", "raw")
+    MINIO_PROCESSED_BUCKET = os.getenv(
+        "MINIO_PROCESSED_BUCKET",
+        "processed",
+    )
+    MINIO_ARCHIVE_BUCKET = os.getenv(
+        "MINIO_ARCHIVE_BUCKET",
+        "archive",
+    )
 
-SUPPORTED_FILE_TYPES = (".csv")
+    @classmethod
+    def validate_minio_settings(cls) -> None:
+        """Validate the required MinIO environment variables."""
+
+        required_values = {
+            "MINIO_ACCESS_KEY": cls.MINIO_ACCESS_KEY,
+            "MINIO_SECRET_KEY": cls.MINIO_SECRET_KEY,
+        }
+
+        missing_values = [
+            name
+            for name, value in required_values.items()
+            if not value
+        ]
+
+        if missing_values:
+            raise ValueError(
+                "Missing required environment variables: "
+                + ", ".join(missing_values)
+            )

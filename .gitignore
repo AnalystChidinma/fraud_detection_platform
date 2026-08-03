@@ -19,8 +19,12 @@ __pycache__/
 .DS_Store
 
 # Data
-data/raw/*.csv
-data/archive/*.csv
+data/raw/*
+data/archive/*
+
+# Keep the folders in Git
+!data/raw/.gitkeep
+!data/archive/.gitkeep
 
 # Logs
 logs/
@@ -29,3 +33,6 @@ logs/
 # AWS Installer
 aws/
 awscliv2.zip
+
+# MinIO
+minio-data/.env

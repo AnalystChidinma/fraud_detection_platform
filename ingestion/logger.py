@@ -11,7 +11,7 @@ from pathlib import Path
 from ingestion.config import LOG_DIR, LOG_FILE_NAME, LOG_LEVEL
 
 
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str):
     """
     Create and return a configured logger.
 
@@ -30,7 +30,7 @@ def get_logger(name: str) -> logging.Logger:
     logger.setLevel(LOG_LEVEL)
 
     
-    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     log_file = LOG_DIR / LOG_FILE_NAME
 
