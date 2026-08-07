@@ -9,6 +9,8 @@ jmespath==1.1.0
 minio==7.2.20
 packaging==26.2
 pluggy==1.6.0
+polars==1.43.2
+polars-runtime-32==1.43.2
 pycparser==3.0
 pycryptodome==3.23.0
 Pygments==2.20.0

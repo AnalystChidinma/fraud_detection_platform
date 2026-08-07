@@ -36,3 +36,5 @@ awscliv2.zip
 
 # MinIO
 minio-data/.env
+
+data/batches/*
