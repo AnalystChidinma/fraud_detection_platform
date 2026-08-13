@@ -38,3 +38,6 @@ awscliv2.zip
 minio-data/.env
 
 data/batches/*
+
+# Operational metadata
+data/metadata/*
