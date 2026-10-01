@@ -1,15 +1,15 @@
 """
-Upload validated source files to the MinIO raw landing zone.
+Upload validated source files to the AWS S3 raw landing zone.
 """
 
 from pathlib import Path
 
-from minio.error import S3Error
+from botocore.exceptions import BotoCoreError, ClientError
 
 from ingestion.checksum import calculate_sha256
 from ingestion.config import Settings
 from ingestion.logger import get_logger
-from ingestion.minio_client import get_minio_client
+from ingestion.s3_client import get_s3_client
 from ingestion.validator import FileValidator
 
 
@@ -17,11 +17,11 @@ logger = get_logger(__name__)
 
 
 class RawFileUploader:
-    """Upload original source files to the MinIO raw bucket."""
+    """Upload original source files to the AWS S3 raw bucket."""
 
     def __init__(self) -> None:
-        self.client = get_minio_client()
-        self.bucket_name = Settings.MINIO_RAW_BUCKET
+        self.client = get_s3_client()
+        self.bucket_name = Settings.AWS_S3_BUCKET
 
     def upload(
         self,
@@ -29,7 +29,7 @@ class RawFileUploader:
         object_name: str | None = None,
     ) -> dict[str, str | int]:
         """
-        Validate and upload a source CSV file to MinIO.
+        Validate and upload a source CSV file to AWS S3.
 
         Args:
             file_path: Local source file path.
@@ -40,8 +40,10 @@ class RawFileUploader:
 
         Raises:
             ValueError: If validation fails.
-            S3Error: If MinIO rejects the upload.
+            ClientError: If AWS S3 rejects the upload.
+            BotoCoreError: If the AWS SDK encounters an error.
         """
+
         path = Path(file_path)
         validator = FileValidator(path)
 
@@ -54,7 +56,7 @@ class RawFileUploader:
         destination_name = (
             object_name
             if object_name
-            else f"transactions/{path.name}"
+            else f"raw/paysim/transactions/{path.name}"
         )
 
         logger.info(
@@ -67,31 +69,35 @@ class RawFileUploader:
         )
 
         try:
-            result = self.client.fput_object(
-                bucket_name=self.bucket_name,
-                object_name=destination_name,
-                file_path=str(path),
-                content_type="text/csv",
-                metadata={
-                    "sha256": checksum,
-                    "source-filename": path.name,
+            self.client.upload_file(
+                Filename=str(path),
+                Bucket=self.bucket_name,
+                Key=destination_name,
+                ExtraArgs={
+                    "ContentType": "text/csv",
+                    "Metadata": {
+                        "sha256": checksum,
+                        "source-filename": path.name,
+                    },
                 },
             )
 
-        except S3Error:
-            logger.exception("MinIO upload failed. File=%s", path)
+        except (ClientError, BotoCoreError):
+            logger.exception(
+                "AWS S3 upload failed. File=%s",
+                path,
+            )
             raise
 
         logger.info(
-            "Upload completed. Bucket=%s Object=%s Version=%s",
-            result.bucket_name,
-            result.object_name,
-            result.version_id,
+            "Upload completed. Bucket=%s Object=%s",
+            self.bucket_name,
+            destination_name,
         )
 
         return {
-            "bucket_name": result.bucket_name,
-            "object_name": result.object_name,
+            "bucket_name": self.bucket_name,
+            "object_name": destination_name,
             "checksum": checksum,
             "file_size": file_size,
         }

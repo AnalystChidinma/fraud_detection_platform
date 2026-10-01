@@ -2,7 +2,7 @@
 Incremental batch ingestion for the Fraud Detection platform.
 
 Only batches that have not been successfully processed before
-are uploaded to the MinIO raw landing zone.
+are uploaded to the AWS S3 raw landing zone.
 """
 
 from pathlib import Path
@@ -67,7 +67,7 @@ class IncrementalLoader:
                 continue
 
             object_name = (
-                f"transactions/batches/{batch_file.name}"
+                f"raw/paysim/transactions/batches/{batch_file.name}"
             )
 
             result = self.uploader.upload(

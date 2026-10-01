@@ -2,7 +2,7 @@
 Batch ingestion workflow for the Fraud Detection platform.
 
 This module coordinates CSV batch creation and uploads each
-generated batch to the MinIO raw landing zone.
+generated batch to the AWS S3 raw landing zone.
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 
 class BatchLoader:
-    """Coordinate batch creation and raw MinIO ingestion."""
+    """Coordinate batch creation and raw AWS S3 ingestion."""
 
     def __init__(
         self,
@@ -55,7 +55,7 @@ class BatchLoader:
         uploaded_batches = []
 
         for batch_file in batch_files:
-            object_name = f"transactions/batches/{batch_file.name}"
+            object_name = f"raw/paysim/transactions/batches/{batch_file.name}" 
 
             logger.info(
                 "Uploading batch. File=%s Object=%s",

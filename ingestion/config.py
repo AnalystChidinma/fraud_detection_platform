@@ -18,7 +18,7 @@ load_dotenv(BASE_DIR / ".env")
 
 
 # Logging configuration
-LOG_DIR = BASE_DIR / "logs"
+LOG_DIR = Path(os.getenv("LOG_DIR", BASE_DIR / "logs"))
 LOG_FILE_NAME = os.getenv("LOG_FILE_NAME", "fraud_detection.log")
 LOG_LEVEL = getattr(
     logging,
@@ -30,30 +30,34 @@ LOG_LEVEL = getattr(
 class Settings:
     """Application configuration loaded from environment variables."""
 
-    # MinIO connection settings
-    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-    MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
-    MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
-    MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
+    # AWS S3 settings
+    AWS_PROFILE = os.getenv("AWS_PROFILE", "fraud-project")
+    AWS_REGION = os.getenv("AWS_REGION", "eu-west-1")
+    AWS_S3_BUCKET = os.getenv(
+        "AWS_S3_BUCKET",
+        "fraud-detection-raw-chidinma-2026",
+    )
+    # ADD THIS LINE: Reads endpoint configuration for local MinIO compatibility
+    AWS_ENDPOINT_URL = os.getenv("LOCAL_MINIO_ENDPOINT")
 
-    # MinIO bucket names
-    MINIO_RAW_BUCKET = os.getenv("MINIO_RAW_BUCKET", "raw")
-    MINIO_PROCESSED_BUCKET = os.getenv(
-        "MINIO_PROCESSED_BUCKET",
-        "processed",
-    )
-    MINIO_ARCHIVE_BUCKET = os.getenv(
-        "MINIO_ARCHIVE_BUCKET",
-        "archive",
-    )
+
+    # Snowflake settings
+    SNOWFLAKE_ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
+    SNOWFLAKE_USER = os.getenv("SNOWFLAKE_USER")
+    SNOWFLAKE_PASSWORD = os.getenv("SNOWFLAKE_PASSWORD")
+    SNOWFLAKE_WAREHOUSE = os.getenv("SNOWFLAKE_WAREHOUSE")
+    SNOWFLAKE_DATABASE = os.getenv("SNOWFLAKE_DATABASE")
+    SNOWFLAKE_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
+
 
     @classmethod
-    def validate_minio_settings(cls) -> None:
-        """Validate the required MinIO environment variables."""
+    def validate_s3_settings(cls) -> None:
+        """Validate the required AWS S3 configuration."""
 
         required_values = {
-            "MINIO_ACCESS_KEY": cls.MINIO_ACCESS_KEY,
-            "MINIO_SECRET_KEY": cls.MINIO_SECRET_KEY,
+            "AWS_PROFILE": cls.AWS_PROFILE,
+            "AWS_REGION": cls.AWS_REGION,
+            "AWS_S3_BUCKET": cls.AWS_S3_BUCKET,
         }
 
         missing_values = [
@@ -64,6 +68,7 @@ class Settings:
 
         if missing_values:
             raise ValueError(
-                "Missing required environment variables: "
+                "Missing required AWS S3 configuration: "
                 + ", ".join(missing_values)
             )
+

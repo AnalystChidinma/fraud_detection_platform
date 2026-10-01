@@ -1,0 +1,88 @@
+version: 2
+models:
+
+    - name: fct_transactions
+      description: "the fact transactions table for the Finguard"
+
+      columns:
+        - name: transaction_key
+          description: "This is the unique surrogate key for each transaction record in the fact transactions table"
+          tests:
+            - unique
+            - not_null
+
+        - name: transaction_key_type
+          description: "This is the foreign key to the transaction type in dimension table"
+          tests:
+            - not_null
+        
+        - name: transaction_step
+          description: "This simulates the step of the transactions"
+          tests:
+            - not_null
+
+        - name: amount
+          description: "This is the amount of the transaction"
+          tests:
+            - not_null
+          
+        - name: is_fraud
+          description: "This is the flag to indicate if the transaction is fraudulent or not"
+          tests:
+            - not_null
+          
+    - name: dim_transaction_type
+      description: "dimension containing the distinct transaction types"
+
+      columns:
+        - name: transaction_key_type
+          description: "This is the surrogate key for the transaction type"
+          tests:
+            - not_null
+            - unique
+          
+        - name: transaction_type
+          description: "This is the mobile money transaction"
+          tests:
+            - not_null
+            - unique
+          
+    - name: fct_fraud_summary
+      description: "Aggregated fraud metrics by transaction step and transaction type"
+      
+      columns:
+        - name: transaction_step
+          description: "This is the stimulated time step at which the transaction occured"
+          tests:
+            - not_null
+          
+        - name: transaction_key_type
+          description: "This is the surrogate key of the transaction type associated with the fact summary"
+          tests:
+            - not_null
+        
+        - name: total_transactions
+          description: "Number of transactions in the aggregated grain"
+          tests:
+            - not_null
+          
+        - name: fraudulent_transactions
+          description: "Number of fraudulent transactions in the aggregation grain."
+          tests:
+          - not_null
+
+        - name: total_transaction_amount
+          description: "Total transaction amount in the aggregation grain."
+          tests:
+            - not_null
+
+        - name: total_fraud_amount
+          description: "Total fraudulent transaction amount in the aggregation grain."
+          tests:
+          - not_null
+
+        - name: fraud_rate
+        
+          description: "Percentage of transactions that are fraudulent."
+          tests:
+          - not_null
