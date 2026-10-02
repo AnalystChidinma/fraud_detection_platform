@@ -552,6 +552,8 @@ Validation should not be treated as an afterthought.
 
 The pipeline should provide evidence that the data remains structurally and logically correct as it moves through the system.
 
+The pipeline ends at the curated analytical marts. These datasets are intended for downstream consumption by fraud analysts, risk teams, and BI/reporting tools. 
+
 
 ## Author
 
