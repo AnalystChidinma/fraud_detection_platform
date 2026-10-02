@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Business Scenario
+##  Business Scenario
 
 A financial services company processes a growing volume of mobile-money transactions.
 
@@ -35,7 +35,7 @@ FinGuard was designed as the data engineering solution for this requirement.
 
 ---
 
-# 2. Data Engineering Problem
+## Data Engineering Problem
 
 The core engineering question was:
 
@@ -44,20 +44,30 @@ The core engineering question was:
 The solution needed to address several engineering concerns:
 
 - incremental ingestion
+
 - duplicate prevention
+
 - raw data preservation
+
 - cloud storage
+
 - scalable warehouse loading
+
 - data transformation
+
 - dimensional modelling
+
 - data quality
+
 - orchestration
+
 - reproducibility
+
 - failure and execution-environment issues
 
 ---
 
-# 3. Proposed Solution
+## Proposed Solution
 
 FinGuard is a batch incremental data engineering pipeline that moves transaction data through the following architecture:
 
@@ -71,7 +81,7 @@ The pipeline stops at the curated data marts.
 
 The downstream analyst or BI team can consume these marts to build reports, dashboards, fraud analysis, or other analytical products.
 
-# Why Batch Instead of Streaming?
+## Why Batch Instead of Streaming?
 
 The architecture was driven by the business requirement.
 
@@ -93,7 +103,7 @@ For this use case, introducing streaming infrastructure would add operational co
 
 The architectural decision was therefore based on the business requirement, not on choosing the most complex technology available.
 
-# Technology Decisions
+## Technology Decisions
 
 | Technology     | Purpose                                                                |
 | -------------- | ---------------------------------------------------------------------- |
@@ -108,7 +118,7 @@ The architectural decision was therefore based on the business requirement, not 
 
 The technologies were selected according to the responsibilities of each layer rather than simply adding tools to the stack.
 
-# Incremental Batch Ingestion
+## Incremental Batch Ingestion
 
 A major requirement of FinGuard is that previously processed transaction batches should not be uploaded again.
 
@@ -141,17 +151,13 @@ This makes the ingestion process idempotent at the file level.
 
 Without persistent ingestion state, rerunning the pipeline could result in previously processed files being treated as new files.
 
-With the ingestion manifest:
-Batch 001 → processed → skip
-Batch 002 → processed → skip
-Batch 003 → new       → process
-
-# AWS S3 Raw Landing Zone
+## AWS S3 Raw Landing Zone
 
 Amazon S3 is used as the raw landing zone.
 
 The implemented bucket is organised as:
 
+```text
 fraud-detection-raw-chidinma-2026/
 └── raw/
     └── paysim/
@@ -162,7 +168,7 @@ fraud-detection-raw-chidinma-2026/
                 ├── transactions_batch_0003.csv
                 ├── ...
                 └── transactions_batch_0011.csv
-
+```
 The current transaction dataset contains:
 
 11 transaction batches
@@ -182,7 +188,7 @@ Snowflake is responsible for warehouse processing.
 
 dbt is responsible for transformation.
 
-# Snowflake Warehouse Loading
+## Snowflake Warehouse Loading
 
 Instead of downloading the complete dataset to the local machine and then pushing it into Snowflake, FinGuard uses Snowflake's ability to read directly from Amazon S3.
 
@@ -235,6 +241,7 @@ Airflow orchestrates the operation while Snowflake performs the warehouse loadin
 
 Conceptually:
 
+```text
 Airflow 
    │
    │ orchestrates
@@ -244,13 +251,15 @@ Snowflake
    │ reads directly from
    ▼
 AWS S3
+```
 
 This separates orchestration from data movement and processing. 
 
-# dbt Transformation Architecture
+## dbt Transformation Architecture
 
 After loading the source data into Snowflake RAW, dbt transforms the data through multiple layers.
 
+```text
 RAW 
  |
  STAGING
@@ -258,6 +267,7 @@ RAW
  INTERMEDIATE
  │
  MARTS
+```
 
 Each layer has a defined responsibility.
 
@@ -298,11 +308,11 @@ The intermediate layer also derives transaction-level measures such as *balance 
 This keeps transformation logic separate from the final analytical marts.
 
 
-# Analytical Data Marts
+## Analytical Data Marts
 
 The final dbt layer contains curated analytical datasets.
 
-## FCT_TRANSACIONS
+### FCT_TRANSACIONS
 
     Grain:
 
@@ -310,11 +320,11 @@ One row per transaction.
 
 This provides transaction-level fact data for detailed analysis.
 
-## DIM_TRANSACTION_TYPE
+### DIM_TRANSACTION_TYPE
 
 Provides transaction-type attributes for analytical grouping and filtering.
 
-## FCT_FRAUD_SUMMARY
+### FCT_FRAUD_SUMMARY
 
 Provides aggregated fraud-related information.
 
@@ -324,7 +334,7 @@ One row per transaction_step × transaction_key_type.
 
 Defining the grain explicitly is important because it determines what one row represents and provides the basis for data quality testing.
 
-# Data Quality and Testing
+## Data Quality and Testing
 
 Data quality is treated as part of the pipeline rather than as a separate activity after transformation.
 
@@ -363,24 +373,9 @@ The test is executed with:
 
 The test passed successfully.
 
- chidinma@DESKTOP-JCOS36F:~/projects/Fraud_detection/dbt/finguard$ dbt test --select fct_fraud_summary_grain
-05:24:36  Running with dbt=1.12.5
-05:24:37  Registered adapter: snowflake=1.12.1
-05:24:39  Found 5 models, 18 data tests, 1 source, 679 macros
-05:24:39  
-05:24:39  Concurrency: 4 threads (target='dev')
-05:24:39  
-05:25:05  1 of 1 START test fct_fraud_summary_grain ...................................... [RUN]
-05:25:06  1 of 1 PASS fct_fraud_summary_grain ............................................ [PASS in 0.41s]
-05:25:07  
-05:25:07  Finished running 1 test in 0 hours 0 minutes and 28.17 seconds (28.17s).
-05:25:07  
-05:25:07  Completed successfully
-05:25:07  
-05:25:07  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=1
-![alt text](image-1.png)
+ c![alt text](image-1.png)
 
-# Airflow Orchestration
+## Airflow Orchestration
 
 Apache Airflow orchestrates the complete pipeline.
 
@@ -390,18 +385,22 @@ The DAG is named:
 
 The workflow contains three major tasks:
 
-ingest_batches
+```text
+    ingest_batches
        │
        ▼
-load_snowflake
+    load_snowflake
        │
        ▼
-dbt_build
+    dbt_build
+```
 
 The dependency is defined explicitly:
 
 ingestion = ingest_batches()
+
 snowflake_load = load_snowflake()
+
 transformation = dbt_build()
 
 ingestion >> snowflake_load >> transformation
@@ -416,17 +415,18 @@ The DAG is scheduled daily.
 
 The successful Airflow run demonstrates the complete execution path:
 
+```test
 S3 ingestion
       ↓
 Snowflake loading
       ↓
 dbt transformation
-
+```
 with all three tasks completing successfully.
 
 ![alt text](image-2.png)
 
-# Docker Execution Environment
+## Docker Execution Environment
 
 Airflow runs using Docker Compose.
 
@@ -450,7 +450,7 @@ The custom image installs the dependencies required by the FinGuard pipeline, in
 - dbt transformations through dbt-core and dbt-snowflake
 - Environment configuration through python-dotenv
 
-# Major Challenge Faced
+## Major Challenge Faced
 
 One of the main implementation challenges occurred when the ingestion pipeline was moved from local execution into Airflow running inside Docker.
 
@@ -489,6 +489,7 @@ If the company later requires transaction-level processing with low latency, a s
 
 For example:
 
+```text 
 Operational Database
         │
         ▼
@@ -502,11 +503,12 @@ Streaming Processing
         │
         ▼
 Real-Time Fraud Detection
+```
 
 This would represent a different business requirement from the current batch architecture.
 
 
-# Key Lessons
+## Key Lessons
 
 Building FinGuard highlighted several practical lessons that go beyond learning individual tools.
 
@@ -551,7 +553,7 @@ Validation should not be treated as an afterthought.
 The pipeline should provide evidence that the data remains structurally and logically correct as it moves through the system.
 
 
-# Author
+## Author
 
 Chidinma Okeh
 
