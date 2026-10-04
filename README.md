@@ -71,7 +71,7 @@ The solution needed to address several engineering concerns:
 
 FinGuard is a batch incremental data engineering pipeline that moves transaction data through the following architecture:
 
-![alt text](image.png)
+![alt text](image-3.png)
 
 Apache Airflow orchestrates the main pipeline:
 
